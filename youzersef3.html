@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إنتة بتسأل ويوسف بجاوب - نسخة محسّنة</title>
+  <style>
+    body {
+      background-color: #ffe6f0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px;
+      direction: rtl;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      color: #c2185b;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 2.2em;
+      text-shadow: 1px 1px 2px #d81b60;
+    }
+    #chatbox {
+      width: 90%;
+      max-width: 600px;
+      height: 400px;
+      background: #fff0f5;
+      border: 2px solid #c2185b;
+      border-radius: 20px;
+      padding: 15px;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      scroll-behavior: smooth;
+    }
+    .message {
+      margin: 10px 0;
+      padding: 10px 15px;
+      border-radius: 20px;
+      max-width: 80%;
+      word-wrap: break-word;
+      position: relative;
+      font-size: 1em;
+      line-height: 1.4em;
+    }
+    .user {
+      background-color: #f8bbd0;
+      align-self: flex-end;
+      text-align: right;
+      margin-left: auto;
+    }
+    .yusuf {
+      background-color: #fce4ec;
+      align-self: flex-start;
+      text-align: right;
+      margin-right: auto;
+    }
+    #input {
+      width: 90%;
+      max-width: 600px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #c2185b;
+    }
+    #send, #clear {
+      background-color: #c2185b;
+      color: white;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 10px;
+      transition: background-color 0.3s ease;
+    }
+    #send:hover, #clear:hover {
+      background-color: #a31545;
+    }
+    #buttons {
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ <span id="welcome-text"></span> ✨</h1>
+  <div id="chatbox"></div>
+  <input type="text" id="input" placeholder="اكتب سؤالك هون بالحلبية..." autocomplete="off" />
+  <div id="buttons">
+    <button id="send">إرسال</button>
+    <button id="clear">مسح المحادثة</button>
+  </div>
+
+  <script>
+    const chatbox = document.getElementById('chatbox');
+    const input = document.getElementById('input');
+    const send = document.getElementById('send');
+    const clear = document.getElementById('clear');
+    const welcomeText = document.getElementById('welcome-text');
+
+    let conversationHistory = [];
+
+    const welcomeMessages = [
+      "يا هلا وغلا بأحلى الغوالي! اسأل وأنا بجاوبك من حلب الحبيبة 💬🌸",
+      "مرحبا يا عمري! قول شو بخاطرك، يوسف هون ليخدمك 💜",
+      "أهلين يا غالي! كل سؤالك عندي جواب من القلب الحلبية 🌹",
+      "يا مرحبا بأحلى ناس بالدنيا! اسأل براحتك يا زلمة طيب 😊"
+    ];
+
+    function randomWelcome() {
+      const index = Math.floor(Math.random() * welcomeMessages.length);
+      return welcomeMessages[index];
+    }
+
+    function addMessage(content, sender) {
+      const div = document.createElement('div');
+      div.className = 'message ' + (sender === 'user' ? 'user' : 'yusuf');
+
+      // إضافة طابع زمني للرسالة
+      const time = new Date();
+      const timeString = time.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+      div.innerHTML = `<strong>${sender === 'user' ? 'أنت' : 'يوسف'}</strong> <small style="font-weight:normal; color:#a31545; margin-left:8px;">${timeString}</small>: ${content}`;
+      chatbox.appendChild(div);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    function addThinking() {
+      const div = document.createElement("div");
+      div.className = "message yusuf";
+      div.id = "thinking";
+      div.innerHTML = `<strong>يوسف:</strong> عم فكرلك يا عمري، لحظة شوي...`;
+      chatbox.appendChild(div);
+      chatbox.scrollTop = chatbox.scrollHeight;
+      return div;
+    }
+
+    function validateInput(text) {
+      if (text.length < 2) {
+        alert("يا عمري، حاول تكتب سؤالك بشكل أوضح قبل الإرسال 😊");
+        return false;
+      }
+      return true;
+    }
+
+    async function sendMessage() {
+      const message = input.value.trim();
+      if (!message) return;
+      if (!validateInput(message)) return;
+
+      addMessage(message, 'user');
+      input.value = '';
+
+      const thinkingDiv = addThinking();
+
+      conversationHistory.push({ role: 'user', content: message });
+      if (conversationHistory.length > 15) conversationHistory.shift();
+
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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"
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-3.5-turbo",
+            messages: [
+              {
+                role: "system",
+                content: `إنت يوسف، بتحكي باللهجة الحلبية، بطرافة وبأسلوب جدي خفيف، وبتجاوب عالأسئلة بكل احترام وبدقة عالية. إذا ما فهمت السؤال، اطلب توضيح بطريقة مهذبة بدون قول "ما فهمت سؤالك" مباشرة. خليك دايمًا لطيف وودود.`
+              },
+              ...conversationHistory
+            ]
+          })
+        });
+
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content;
+
+        thinkingDiv.remove();
+
+        if (reply && reply.trim() !== '') {
+          addMessage(reply, 'yusuf');
+          conversationHistory.push({ role: 'assistant', content: reply });
+          if (conversationHistory.length > 15) conversationHistory.shift();
+        } else {
+          addMessage('في شي مو واضح، فيك تعيد السؤال بطريقة أبسط؟', 'yusuf');
+        }
+      } catch (error) {
+        thinkingDiv.remove();
+        addMessage('صار في مشكلة بالتواصل، جرب تسألني بعد شوي يا قلبي 😊', 'yusuf');
+      }
+    }
+
+    send.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    clear.addEventListener('click', () => {
+      chatbox.innerHTML = '';
+      conversationHistory = [];
+      addMessage(randomWelcome(), 'yusuf');
+    });
+
+    // أول ترحيب عند تحميل الصفحة
+    window.onload = () => {
+      addMessage(randomWelcome(), 'yusuf');
+    };
+  </script>
+</body>
+</html>
